@@ -26,11 +26,8 @@
 !/Packages/**
 
 ###########################
-Fisherman\bin\Debug
-
 !/Fisherman/
 
-/Fisherman/*
 !/Fisherman/bin/
 
 /Fisherman/bin/*
