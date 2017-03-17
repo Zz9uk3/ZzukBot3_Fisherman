@@ -66,6 +66,6 @@ namespace Fisherman
 
         public string Name { get; } = "Fisherman";
         public string Author { get; } = "Zzuk";
-        public int Version { get; } = 1;
+        public int Version { get; } = 2;
     }
 }

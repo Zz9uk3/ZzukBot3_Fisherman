@@ -66,6 +66,7 @@ namespace Fisherman
                     // Cast fishing (only each 1000ms tho)
                     if (ZzukBot.Helpers.Wait.For("FishingWait", 1000))
                         Spell.Instance.Cast("Fishing");
+                    ObjectManager.Instance.Player.AntiAfk();
                     // Stil running. Only success if we are casting fishing
                     return BehaviourTreeStatus.Running;
                 })
