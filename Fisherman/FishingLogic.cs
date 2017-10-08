@@ -24,6 +24,8 @@ namespace Fisherman
         // here we will store the guid of the "invalid" bobber
         private ulong _oldBobberGuid;
         private readonly MainThread.Updater _logicPulse;
+        
+        private string[] _lures = { "WTFISGOINGON??", "Shiny Bauble", "Nightcrawlers", "Bright Baubles", "Aquadynamic Fish Attractor" };
 
         // Constructor
         public FishingLogic(Base baseInstance)
@@ -54,6 +56,22 @@ namespace Fisherman
                     _oldBobberGuid = player.CurrentLootGuid;
                     if (ZzukBot.Helpers.Wait.For("FishingLootWait2", 500))
                         LootFrame.Instance.LootAll();
+                    return BehaviourTreeStatus.Running;
+                })
+                .Do("ApplyLure", data =>
+                {
+                    var player = ObjectManager.Instance.Player;
+                    var lure = Inventory.Instance.GetLastItem(_lures);
+                    var bobber = ObjectManager.Instance.GameObjects.FirstOrDefault(x => x.OwnedBy == player.Guid && x.Guid != _oldBobberGuid);
+                    if ((player.Channeling != 0 && bobber != null) || player.IsMainhandEnchanted() || lure == "")
+                    {
+                        return BehaviourTreeStatus.Success;
+                    }
+                    if (!player.IsMainhandEnchanted() && ZzukBot.Helpers.Wait.For("ApplyingLure", 5500))
+                    {
+                        player.EnchantMainhandItem(lure);
+                        return BehaviourTreeStatus.Running;
+                    }
                     return BehaviourTreeStatus.Running;
                 })
                 .Do("Cast", data =>
