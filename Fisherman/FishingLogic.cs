@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using ZzukBot.Game.Statics;
@@ -24,7 +24,8 @@ namespace Fisherman
         // here we will store the guid of the "invalid" bobber
         private ulong _oldBobberGuid;
         private readonly MainThread.Updater _logicPulse;
-        
+
+        private string startLocation;
         private string[] _lures = { "WTFISGOINGON??", "Shiny Bauble", "Nightcrawlers", "Bright Baubles", "Aquadynamic Fish Attractor" };
 
         // Constructor
@@ -46,6 +47,17 @@ namespace Fisherman
                     var player = ObjectManager.Instance.Player;
                     // We are ingame and we find the player = success
                     return player == null ? BehaviourTreeStatus.Failure : BehaviourTreeStatus.Success;
+                })
+                .Do("AntiTP", data =>
+                {
+                    var player = ObjectManager.Instance.Player;
+                    if (player.RealZoneText != startLocation)
+                    {
+                        Console.Beep(800, 2000);
+                        Stop();
+                        return BehaviourTreeStatus.Failure;
+                    }
+                    return BehaviourTreeStatus.Success;
                 })
                 .Do("CheckLootWindow", data =>
                 {
@@ -70,7 +82,6 @@ namespace Fisherman
                     if (!player.IsMainhandEnchanted() && ZzukBot.Helpers.Wait.For("ApplyingLure", 5500))
                     {
                         player.EnchantMainhandItem(lure);
-                        return BehaviourTreeStatus.Running;
                     }
                     return BehaviourTreeStatus.Running;
                 })
@@ -78,8 +89,7 @@ namespace Fisherman
                 {
                     var player = ObjectManager.Instance.Player;
                     // We are channeling something (fishing)? Success!
-                    var bobber = ObjectManager.Instance.GameObjects
-                        .FirstOrDefault(x => x.OwnedBy == player.Guid && x.Guid != _oldBobberGuid);
+                    var bobber = ObjectManager.Instance.GameObjects.FirstOrDefault(x => x.OwnedBy == player.Guid && x.Guid != _oldBobberGuid);
                     if (player.Channeling != 0 && bobber != null) return BehaviourTreeStatus.Success;
                     // Cast fishing (only each 1000ms tho)
                     if (ZzukBot.Helpers.Wait.For("FishingWait", 1000))
@@ -91,8 +101,7 @@ namespace Fisherman
                 .Do("WaitForFish", data =>
                 {
                     var player = ObjectManager.Instance.Player;
-                    var bobber = ObjectManager.Instance.GameObjects
-                        .FirstOrDefault(x => x.OwnedBy == player.Guid && x.Guid != _oldBobberGuid);
+                    var bobber = ObjectManager.Instance.GameObjects.FirstOrDefault(x => x.OwnedBy == player.Guid && x.Guid != _oldBobberGuid);
                     // No bobber? Fail
                     if (bobber == null) return BehaviourTreeStatus.Failure;
                     // Bobber got no fish? Waiting!
@@ -149,6 +158,8 @@ namespace Fisherman
                     MessageBox.Show("The active toon has no fishing skill");
                     return false;
                 }
+
+                startLocation = player.RealZoneText;
 
                 // All checks passed. Lets run the botbase
                 _isRunning = true;
